@@ -3,19 +3,26 @@ package handler
 import (
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/kombu/usecase"
+	"fmt"
 )
+
+const (
+	ROOT_INODE = 1
+)
+
 
 type FuseHandler interface {
 	fuse.RawFileSystem
 }
 
 type fuseHandler struct {
-	root string
+	r RootHandler
 	u usecase.AttrUseCase
 }
 
 func NewFuseHandler(mountpoint string, u usecase.AttrUseCase) FuseHandler {
-	return &fuseHandler{mountpoint, u}
+	r := NewRootHandler(mountpoint)
+	return &fuseHandler{r, u}
 }
 
 func (fs *fuseHandler) Init(*fuse.Server) {
@@ -27,18 +34,31 @@ func (fs *fuseHandler) String() string {
 }
 
 func (fs *fuseHandler) StatFs(header *fuse.InHeader, out *fuse.StatfsOut) fuse.Status {
+	if header.NodeId == ROOT_INODE {
+		fmt.Println("Statfs!!!!!!!!!!!!!!!!!!!")
+		return fuse.OK
+	}
 	return fuse.ENOSYS
 }
 
 func (fs *fuseHandler) Lookup(header *fuse.InHeader, name string, out *fuse.EntryOut) (code fuse.Status) {
+	if header.NodeId == ROOT_INODE {
+		fmt.Println("!!!!!!!!!!!!!!!!!!!")
+	}
 	return fuse.ENOSYS
 }
 
 func (fs *fuseHandler) GetAttr(input *fuse.GetAttrIn, out *fuse.AttrOut) (code fuse.Status) {
+	if input.NodeId == ROOT_INODE {
+		return fs.r.GetAttr(input, out)
+	}
 	return fuse.ENOSYS
 }
 
 func (fs *fuseHandler) Access(input *fuse.AccessIn) (code fuse.Status) {
+	if input.InHeader.NodeId == ROOT_INODE {
+		return fuse.OK
+	}
 	return fuse.ENOSYS
 }
 
