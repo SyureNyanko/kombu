@@ -2,11 +2,13 @@ package handler
 
 import (
 	"github.com/hanwen/go-fuse/fuse"
-	"fmt"
+	"log"
 )
 
 type RootHandler interface {
-	GetAttr(*fuse.GetAttrIn, *fuse.AttrOut) (fuse.Status)
+	GetAttr(*fuse.GetAttrIn, *fuse.AttrOut) fuse.Status
+	StatFs( *fuse.InHeader, *fuse.StatfsOut) fuse.Status 
+	Lookup( *fuse.InHeader,  string, *fuse.EntryOut) fuse.Status
 }
 
 type rootHandler struct {
@@ -26,6 +28,16 @@ func (fs *rootHandler) GetAttr(input *fuse.GetAttrIn, out *fuse.AttrOut) (code f
 		},
 	}
 	
-	fmt.Println("RootGetAttr")
+	log.Println("RootGetAttr")
+	return fuse.OK
+}
+
+func (fs *rootHandler) StatFs(header *fuse.InHeader, out *fuse.StatfsOut) fuse.Status {
+	log.Println("StatFs")
+	return fuse.OK
+}
+
+func (fs *rootHandler) Lookup(header *fuse.InHeader, name string, out *fuse.EntryOut) (code fuse.Status) {
+	log.Println("Lookup")
 	return fuse.OK
 }

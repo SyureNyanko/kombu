@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/kombu/usecase"
-	"fmt"
 )
 
 const (
@@ -35,15 +34,14 @@ func (fs *fuseHandler) String() string {
 
 func (fs *fuseHandler) StatFs(header *fuse.InHeader, out *fuse.StatfsOut) fuse.Status {
 	if header.NodeId == ROOT_INODE {
-		fmt.Println("Statfs!!!!!!!!!!!!!!!!!!!")
-		return fuse.OK
+		return fs.r.StatFs(header, out)
 	}
 	return fuse.ENOSYS
 }
 
 func (fs *fuseHandler) Lookup(header *fuse.InHeader, name string, out *fuse.EntryOut) (code fuse.Status) {
 	if header.NodeId == ROOT_INODE {
-		fmt.Println("!!!!!!!!!!!!!!!!!!!")
+		return fs.r.Lookup(header, name, out)
 	}
 	return fuse.ENOSYS
 }
