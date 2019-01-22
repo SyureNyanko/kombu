@@ -55,16 +55,28 @@ func (fs *fuseHandler) GetAttr(input *fuse.GetAttrIn, out *fuse.AttrOut) (code f
 
 func (fs *fuseHandler) Access(input *fuse.AccessIn) (code fuse.Status) {
 	if input.InHeader.NodeId == ROOT_INODE {
-		return fuse.OK
+		return fs.r.Access(input)
 	}
 	return fuse.ENOSYS
 }
+
+func (fs *fuseHandler) ReadDir(input *fuse.ReadIn, out *fuse.DirEntryList) fuse.Status {
+	if input.InHeader.NodeId == ROOT_INODE {
+		return fs.r.ReadDir(input, out)
+	}
+	return fuse.ENOSYS
+}
+
+
 
 func (fs *fuseHandler) Create(input *fuse.CreateIn, name string, out *fuse.CreateOut) (code fuse.Status) {
 	return fuse.ENOSYS
 }
 
 func (fs *fuseHandler) OpenDir(input *fuse.OpenIn, out *fuse.OpenOut) (status fuse.Status) {
+	if input.InHeader.NodeId == ROOT_INODE {
+		return fs.r.OpenDir(input, out)
+	}
 	return fuse.ENOSYS
 }
 
@@ -96,10 +108,6 @@ func (fs *fuseHandler) Flush(input *fuse.FlushIn) fuse.Status {
 }
 
 func (fs *fuseHandler) Fsync(input *fuse.FsyncIn) (code fuse.Status) {
-	return fuse.ENOSYS
-}
-
-func (fs *fuseHandler) ReadDir(input *fuse.ReadIn, l *fuse.DirEntryList) fuse.Status {
 	return fuse.ENOSYS
 }
 
@@ -185,4 +193,5 @@ func (fs *fuseHandler) SetAttr(input *fuse.SetAttrIn, out *fuse.AttrOut) (code f
 
 func (fs *fuseHandler) SetDebug(dbg bool) {
 }
+
 
