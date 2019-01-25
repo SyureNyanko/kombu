@@ -8,7 +8,7 @@ import (
 )
 
 type AttrUseCase interface {
-	CreateNewAttr(ctx context.Context, a *model.Attr) error
+	SaveAttr(ctx context.Context, a *model.Attr) error
 	GetAttr(ctx context.Context, id int64) (*model.Attr, error)
 	GetChildren(ctx context.Context, id int64) (*[]model.Attr, error)
 	DeleteAttr(ctx context.Context, id int64) error
@@ -23,8 +23,8 @@ func NewAttrInteractor(r repository.AttrRepository) AttrUseCase {
 	return &attrInteractor{r}
 }
 
-func (interactor *attrInteractor) CreateNewAttr(ctx context.Context, a *model.Attr) error {
-	_, err := interactor.AttrRepository.Create(ctx, a)
+func (interactor *attrInteractor) SaveAttr(ctx context.Context, a *model.Attr) error {
+	_, err := interactor.AttrRepository.SaveAttr(ctx, a)
 	return err
 }
 
