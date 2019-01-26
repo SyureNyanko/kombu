@@ -5,32 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hanwen/go-fuse/fuse"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/kombu/domain/model"
 	"github.com/kombu/domain/repository"
 )
 
-type AttrConfigure struct {
-	uid uint32
-	gid uint32
-}
-
 // AttrRepositoryImpl Implements repository.AttrRepository
 type AttrRepositoryImpl struct {
-	dbpath    string
-	configure AttrConfigure
+	dbpath string
 }
 
-func NewAttrRepositoryWithSQLite(dbpath string) repository.AttrRepository {
-	/*
-		ToDO : Connect with upper
-	*/
-	conf := AttrConfigure{
-		100, 100,
-	}
+var uid uint32 = 100
+var gid uint32 = 100
 
+func NewAttrRepositoryWithSQLite(dbpath string) repository.AttrRepository {
 	db, err := gorm.Open("sqlite3", dbpath)
 	if err != nil {
 		panic("failed to connect database")
@@ -41,7 +30,7 @@ func NewAttrRepositoryWithSQLite(dbpath string) repository.AttrRepository {
 	db.DropTableIfExists(&model.Attr{})
 	db.CreateTable()
 	db.AutoMigrate(&model.Attr{})
-	return &AttrRepositoryImpl{dbpath: dbpath, configure: conf}
+	return &AttrRepositoryImpl{dbpath: dbpath}
 }
 
 func DBErrorPrint(errors []error) {
@@ -76,34 +65,32 @@ type Attr struct {
 
 */
 
-func (r *AttrRepositoryImpl) CreateAttr(name string, isDir bool) *model.Attr {
+func NewAttrGenerator(inode uint64, mode uint32, name string) *model.Attr {
 	attr := model.Attr{}
+	attr.Ino, attr.Id = inode, inode
 	attr.Name = name
 	now := time.Now()
 	nowunixtime := uint64(now.Unix())
 	nowunixnanotime := uint32(now.UnixNano())
 	attr.Atime, attr.Mtime, attr.Ctime = nowunixtime, nowunixtime, nowunixtime
 	attr.Atimensec, attr.Mtimensec, attr.Ctimensec = nowunixnanotime, nowunixnanotime, nowunixnanotime
-	if isDir {
-		attr.Mode = fuse.S_IFDIR | 0755
-	} else {
-		attr.Mode = fuse.S_IFREG | 0644
-	}
-	attr.Uid = r.configure.uid
-	attr.Gid = r.configure.gid
+	attr.Mode = mode
+	attr.Uid = uid
+	attr.Gid = gid
 	return &attr
 }
 
-func (r *AttrRepositoryImpl) SaveAttr(ctx context.Context, attr *model.Attr) (*model.Attr, error) {
+func (r *AttrRepositoryImpl) Create(ctx context.Context, inode uint64, mode uint32, name string) error {
+	attr := NewAttrGenerator(inode, mode, name)
 	db, err := gorm.Open("sqlite3", r.dbpath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer db.Close()
 	if err := db.Create(&attr).GetErrors(); len(err) != 0 {
-		return nil, fmt.Errorf("DB Error")
+		return fmt.Errorf("DB Error")
 	}
-	return attr, nil
+	return nil
 }
 
 func (r *AttrRepositoryImpl) FetchById(ctx context.Context, inode int64) (*model.Attr, error) {

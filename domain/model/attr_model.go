@@ -1,7 +1,7 @@
 package model
 
 type Attr struct {
-	Id       int
+	Id       uint64
 	ParentId int
 	Name     string
 

@@ -7,9 +7,7 @@ import (
 )
 
 type AttrRepository interface {
-	CreateAttr(name string, dir bool) *model.Attr
-
-	SaveAttr(ctx context.Context, attr *model.Attr) (*model.Attr, error)
+	Create(ctx context.Context, inode uint64, mode uint32, name string) error
 	FetchById(ctx context.Context, inode int64) (*model.Attr, error)
 	Update(ctx context.Context, attr *model.Attr) (*model.Attr, error)
 	Delete(ctx context.Context, inode int64) error

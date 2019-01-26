@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/kombu/usecase"
 )
@@ -8,7 +10,6 @@ import (
 const (
 	ROOT_INODE = 1
 )
-
 
 type FuseHandler interface {
 	fuse.RawFileSystem
@@ -67,9 +68,25 @@ func (fs *fuseHandler) ReadDir(input *fuse.ReadIn, out *fuse.DirEntryList) fuse.
 	return fuse.ENOSYS
 }
 
+/*
+type InHeader struct {
+	Length uint32
+	Opcode int32
+	Unique uint64
+	NodeId uint64
+	Context
+	Padding uint32
+}
 
+*/
 
 func (fs *fuseHandler) Create(input *fuse.CreateIn, name string, out *fuse.CreateOut) (code fuse.Status) {
+	ctx := context.TODO()
+	id := input.InHeader.NodeId
+	mode := input.Mode
+	if err := fs.u.Create(ctx, id, mode, name); err != nil {
+		return fuse.ENOSYS
+	}
 	return fuse.ENOSYS
 }
 
@@ -129,7 +146,6 @@ func (fs *fuseHandler) Fallocate(in *fuse.FallocateIn) (code fuse.Status) {
 func (fs *fuseHandler) Forget(nodeID, nlookup uint64) {
 }
 
-
 func (fs *fuseHandler) GetXAttrSize(header *fuse.InHeader, attr string) (size int, code fuse.Status) {
 	return 0, fuse.ENOSYS
 }
@@ -149,7 +165,6 @@ func (fs *fuseHandler) ListXAttr(header *fuse.InHeader) (data []byte, code fuse.
 func (fs *fuseHandler) RemoveXAttr(header *fuse.InHeader, attr string) fuse.Status {
 	return fuse.ENOSYS
 }
-
 
 func (fs *fuseHandler) Readlink(header *fuse.InHeader) (out []byte, code fuse.Status) {
 	return nil, fuse.ENOSYS
@@ -190,8 +205,5 @@ func (fs *fuseHandler) SetAttr(input *fuse.SetAttrIn, out *fuse.AttrOut) (code f
 	return fuse.ENOSYS
 }
 
-
 func (fs *fuseHandler) SetDebug(dbg bool) {
 }
-
-
