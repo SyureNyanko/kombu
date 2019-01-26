@@ -12,14 +12,25 @@ import (
 	"github.com/kombu/domain/repository"
 )
 
+type AttrConfigure struct {
+	uid uint32
+	gid uint32
+}
+
 // AttrRepositoryImpl Implements repository.AttrRepository
 type AttrRepositoryImpl struct {
-	dbpath string
-	gid = 100
-	uid = 100
+	dbpath    string
+	configure AttrConfigure
 }
 
 func NewAttrRepositoryWithSQLite(dbpath string) repository.AttrRepository {
+	/*
+		ToDO : Connect with upper
+	*/
+	conf := AttrConfigure{
+		100, 100,
+	}
+
 	db, err := gorm.Open("sqlite3", dbpath)
 	if err != nil {
 		panic("failed to connect database")
@@ -30,7 +41,7 @@ func NewAttrRepositoryWithSQLite(dbpath string) repository.AttrRepository {
 	db.DropTableIfExists(&model.Attr{})
 	db.CreateTable()
 	db.AutoMigrate(&model.Attr{})
-	return &AttrRepositoryImpl{dbpath: dbpath}
+	return &AttrRepositoryImpl{dbpath: dbpath, configure: conf}
 }
 
 func DBErrorPrint(errors []error) {
@@ -69,8 +80,8 @@ func (r *AttrRepositoryImpl) CreateAttr(name string, isDir bool) *model.Attr {
 	attr := model.Attr{}
 	attr.Name = name
 	now := time.Now()
-	nowunixtime := now.Unix()
-	nowunixnanotime := now.UnixNano()
+	nowunixtime := uint64(now.Unix())
+	nowunixnanotime := uint32(now.UnixNano())
 	attr.Atime, attr.Mtime, attr.Ctime = nowunixtime, nowunixtime, nowunixtime
 	attr.Atimensec, attr.Mtimensec, attr.Ctimensec = nowunixnanotime, nowunixnanotime, nowunixnanotime
 	if isDir {
@@ -78,12 +89,12 @@ func (r *AttrRepositoryImpl) CreateAttr(name string, isDir bool) *model.Attr {
 	} else {
 		attr.Mode = fuse.S_IFREG | 0644
 	}
-	attr.Uid = r.uid
-	att.Gid = r.gid
+	attr.Uid = r.configure.uid
+	attr.Gid = r.configure.gid
 	return &attr
 }
 
-func (r *AttrRepositoryImpl) Create(ctx context.Context, attr *model.Attr) (*model.Attr, error) {
+func (r *AttrRepositoryImpl) SaveAttr(ctx context.Context, attr *model.Attr) (*model.Attr, error) {
 	db, err := gorm.Open("sqlite3", r.dbpath)
 	if err != nil {
 		return nil, err
@@ -148,15 +159,15 @@ func (r *AttrRepositoryImpl) FetchChildrenbyId(ctx context.Context, parentid int
 
 }
 
-func (r *AttrRepositoryImpl) IdExist(ctx context.Context, id int64) error {
+func (r *AttrRepositoryImpl) IdisExists(ctx context.Context, id int64) (bool, error) {
 	db, err := gorm.Open("sqlite3", r.dbpath)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 	defer db.Close()
 	attrs := []model.Attr{}
 	if err := db.Find(&attrs, "id = ?", id).Error; err != nil {
-		return nil, fmt.Errorf("DB Error")
+		return false, fmt.Errorf("DB Error")
 	}
 	if len(attrs) == 0 {
 		return false, nil
