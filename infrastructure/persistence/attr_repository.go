@@ -65,7 +65,7 @@ type Attr struct {
 
 */
 
-func NewAttrGenerator(inode uint64, mode uint32, name string) *model.Attr {
+func NewAttrGenerator(parentId uint64, inode uint64, mode uint32, name string) model.Attr {
 	attr := model.Attr{}
 	attr.Ino, attr.Id = inode, inode
 	attr.Name = name
@@ -77,20 +77,20 @@ func NewAttrGenerator(inode uint64, mode uint32, name string) *model.Attr {
 	attr.Mode = mode
 	attr.Uid = uid
 	attr.Gid = gid
-	return &attr
+	return attr
 }
 
-func (r *AttrRepositoryImpl) Create(ctx context.Context, inode uint64, mode uint32, name string) error {
-	attr := NewAttrGenerator(inode, mode, name)
+func (r *AttrRepositoryImpl) Create(ctx context.Context, parentId uint64, inode uint64, mode uint32, name string) (*model.Attr, error) {
+	attr := NewAttrGenerator(parentId, inode, mode, name)
 	db, err := gorm.Open("sqlite3", r.dbpath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer db.Close()
 	if err := db.Create(&attr).GetErrors(); len(err) != 0 {
-		return fmt.Errorf("DB Error")
+		return nil, fmt.Errorf("DB Error")
 	}
-	return nil
+	return &attr, nil
 }
 
 func (r *AttrRepositoryImpl) FetchById(ctx context.Context, inode int64) (*model.Attr, error) {

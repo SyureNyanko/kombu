@@ -1,48 +1,105 @@
 package controller
 
 import (
-    "github.com/kombu/usecase"
+	"github.com/hanwen/go-fuse/fuse"
+	"github.com/kombu/domain/model"
 )
 
-const (
-	ATTR_VALID = 0
-	ATTR_NSEC = 0
-)
-
-
-type AttrController struct {
-	*root
+type AttrController interface {
+	ModelToFuse(m *model.Attr) *fuse.Attr
+	FuseAttrToEntryOut(fa *fuse.Attr) *fuse.EntryOut
 }
 
-func (c *AttrController) GetAttr(input *fuse.GetAttrIn, out *fuse.AttrOut) error {
-	nodeid := input.InHeader.NodeId
-	ctx := context.TODO()
-	attr, err := GetAttr(ctx, nodeid)
-	if err != nil {
-		return err
+type attrController struct{}
+
+func NewAttrController() AttrController {
+	return &attrController{}
+}
+
+/*
+type Attr struct {
+	Ino         uint64
+	Size        uint64
+	Blocks      uint64
+	Atime       uint64
+	Mtime       uint64
+	Ctime       uint64
+	Crtime_     uint64 // OS X
+	Atimensec   uint32
+	Mtimensec   uint32
+	Ctimensec   uint32
+	Crtimensec_ uint32 // OS X
+	Mode        uint32
+	Nlink       uint32
+	Owner
+	Rdev   uint32
+	Flags_ uint32 //  OS X
+}
+*/
+/*
+type Attr struct {
+	Id       uint64
+	ParentId uint64
+	Name     string
+
+	Ino       uint64
+	Size      uint64
+	Blocks    uint64
+	Atime     uint64
+	Mtime     uint64
+	Ctime     uint64
+	Atimensec uint32
+	Mtimensec uint32
+	Ctimensec uint32
+	Mode      uint32
+	Nlink     uint32
+	Uid       uint32
+	Gid       uint32
+	Rdev      uint32
+	Blksize   uint32
+	Padding   uint32
+}
+
+*/
+func (a *attrController) ModelToFuse(m *model.Attr) *fuse.Attr {
+	return &fuse.Attr{
+		Ino:       m.Ino,
+		Size:      m.Size,
+		Blocks:    m.Blocks,
+		Atime:     m.Atime,
+		Mtime:     m.Mtime,
+		Ctime:     m.Ctime,
+		Atimensec: m.Atimensec,
+		Mode:      m.Mode,
+		Nlink:     m.Nlink,
+		Owner: fuse.Owner{
+			Uid: m.Uid,
+			Gid: m.Gid,
+		},
+		Rdev: m.Rdev,
 	}
-	out = &AttrOut{
-		Attrvallid : ATTR_VALID,
-		AttrValidNsec : ATTR_NSEC,
-		Attr : fuse.Attr{
-			Ino       : attr.Ino,
-			Size      : attr.Size,
-			Blocks    : attr.Blocks,
-			Atime     : attr.Atime,
-			Mtime     : attr.Mtime,
-			Ctime     : attr.Ctime,
-			Atimensec : attr.Atimensec,
-			Mtimensec : attr.Mtimensec,
-			Ctimensec : attr.Ctimensec,
-			Mode      : attr.Mode,
-			Nlink     : attr.Nlink,
-			Owner : fuse.Owner{
-				Uid: attr.Uid,
-				Gif : attr.Gid,
-			}
-			Rdev    : attr.Rdev,
-			Blksize : attr.Blksize,
-			Padding : attr.Padding,
-		}
+}
+
+/*
+type EntryOut struct {
+	NodeId         uint64
+	Generation     uint64
+	EntryValid     uint64
+	AttrValid      uint64
+	EntryValidNsec uint32
+	AttrValidNsec  uint32
+	Attr
+}
+
+
+*/
+
+func (a *attrController) FuseAttrToEntryOut(fa *fuse.Attr) *fuse.EntryOut {
+	/*
+		TODO : Generation ...
+	*/
+	return &fuse.EntryOut{
+		NodeId: fa.Ino,
+		Attr:   *fa,
 	}
 }

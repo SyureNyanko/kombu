@@ -7,8 +7,9 @@ import (
 	"path"
 
 	"github.com/hanwen/go-fuse/fuse"
-	"github.com/kombu/interfaces/handler"
+	"github.com/kombu/infrastructure/inode"
 	"github.com/kombu/infrastructure/persistence"
+	"github.com/kombu/interfaces/handler"
 	"github.com/kombu/usecase"
 )
 
@@ -23,7 +24,8 @@ func main() {
 	mountPoint := flag.Arg(0)
 
 	sqlRepository := persistence.NewAttrRepositoryWithSQLite("test.sqlite")
-	usecase := usecase.NewAttrInteractor(sqlRepository)
+	inodeServerRepository := inode.NewInodeServerImpl("inodefile")
+	usecase := usecase.NewAttrInteractor(sqlRepository, inodeServerRepository)
 	kombufs := handler.NewFuseHandler(mountPoint, usecase)
 	fmt.Println(mountPoint)
 	mountOpts := fuse.MountOptions{}

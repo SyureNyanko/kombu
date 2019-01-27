@@ -2,7 +2,7 @@ package model
 
 type Attr struct {
 	Id       uint64
-	ParentId int
+	ParentId uint64
 	Name     string
 
 	Ino       uint64
@@ -21,4 +21,7 @@ type Attr struct {
 	Rdev      uint32
 	Blksize   uint32
 	Padding   uint32
+}
+
+type InodeServer struct {
 }

@@ -81,12 +81,15 @@ type InHeader struct {
 */
 
 func (fs *fuseHandler) Create(input *fuse.CreateIn, name string, out *fuse.CreateOut) (code fuse.Status) {
-	ctx := context.TODO()
-	id := input.InHeader.NodeId
-	mode := input.Mode
-	if err := fs.u.Create(ctx, id, mode, name); err != nil {
-		return fuse.ENOSYS
-	}
+	/*
+		ctx := context.TODO()
+		id := input.InHeader.NodeId
+		mode := input.Mode
+		if err := fs.u.Create(ctx, parentId, id, mode, name); err != nil {
+			log.Printf("Create %t", input)
+			return fuse.OK
+		}
+	*/
 	return fuse.ENOSYS
 }
 
@@ -170,8 +173,31 @@ func (fs *fuseHandler) Readlink(header *fuse.InHeader) (out []byte, code fuse.St
 	return nil, fuse.ENOSYS
 }
 
+/*
+mknod
+*/
+/*
+
+type EntryOut struct {
+	NodeId         uint64
+	Generation     uint64
+	EntryValid     uint64
+	AttrValid      uint64
+	EntryValidNsec uint32
+	AttrValidNsec  uint32
+	Attr
+}
+
+*/
+
 func (fs *fuseHandler) Mknod(input *fuse.MknodIn, name string, out *fuse.EntryOut) (code fuse.Status) {
-	return fuse.ENOSYS
+	ctx := context.TODO()
+	entryout, err := fs.u.Create(ctx, &(input.InHeader), input.Mode, name)
+	*out = *entryout
+	if err != nil {
+		return fuse.ENOSYS
+	}
+	return fuse.OK
 }
 
 func (fs *fuseHandler) Mkdir(input *fuse.MkdirIn, name string, out *fuse.EntryOut) (code fuse.Status) {

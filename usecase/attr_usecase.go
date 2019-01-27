@@ -3,12 +3,14 @@ package usecase
 import (
 	"context"
 
+	"github.com/hanwen/go-fuse/fuse"
 	"github.com/kombu/domain/model"
 	"github.com/kombu/domain/repository"
+	"github.com/kombu/interfaces/controller"
 )
 
 type AttrUseCase interface {
-	Create(ctx context.Context, inode uint64, mode uint32, name string) error
+	Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.EntryOut, error)
 	GetAttr(ctx context.Context, id int64) (*model.Attr, error)
 	GetChildren(ctx context.Context, id int64) (*[]model.Attr, error)
 	DeleteAttr(ctx context.Context, id int64) error
@@ -17,15 +19,27 @@ type AttrUseCase interface {
 
 type attrInteractor struct {
 	AttrRepository repository.AttrRepository
+	InodeServer    repository.InodeServer
+	Controller     controller.AttrController
 }
 
-func NewAttrInteractor(r repository.AttrRepository) AttrUseCase {
-	return &attrInteractor{r}
+func NewAttrInteractor(r repository.AttrRepository, i repository.InodeServer) AttrUseCase {
+	c := controller.NewAttrController()
+	return &attrInteractor{r, i, c}
 }
 
-func (interactor *attrInteractor) Create(ctx context.Context, inode uint64, mode uint32, name string) error {
-	err := interactor.AttrRepository.Create(ctx, inode, mode, name)
-	return err
+func (interactor *attrInteractor) Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.EntryOut, error) {
+	inode, err := interactor.InodeServer.IssueId()
+	if err != nil {
+		return nil, err
+	}
+	modelAttr, err := interactor.AttrRepository.Create(ctx, header.NodeId /* parent nodeid */, inode, mode, name)
+	if err != nil {
+		return nil, err
+	}
+	fuseAttr := interactor.Controller.ModelToFuse(modelAttr)
+	entryout := interactor.Controller.FuseAttrToEntryOut(fuseAttr)
+	return entryout, err
 }
 
 func (interactor *attrInteractor) GetAttr(ctx context.Context, id int64) (*model.Attr, error) {
