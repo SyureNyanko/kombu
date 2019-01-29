@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/kombu/domain/model"
@@ -10,7 +12,8 @@ import (
 )
 
 type AttrUseCase interface {
-	Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.EntryOut, error)
+	Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.CreateOut, error)
+	Mknod(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.EntryOut, error)
 	GetAttr(ctx context.Context, id int64) (*model.Attr, error)
 	GetChildren(ctx context.Context, id int64) (*[]model.Attr, error)
 	DeleteAttr(ctx context.Context, id int64) error
@@ -28,17 +31,39 @@ func NewAttrInteractor(r repository.AttrRepository, i repository.InodeServer) At
 	return &attrInteractor{r, i, c}
 }
 
-func (interactor *attrInteractor) Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.EntryOut, error) {
+func (interactor *attrInteractor) Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.CreateOut, error) {
 	inode, err := interactor.InodeServer.IssueId()
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	modelAttr, err := interactor.AttrRepository.Create(ctx, header.NodeId /* parent nodeid */, inode, mode, name)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	fuseAttr := interactor.Controller.ModelToFuse(modelAttr)
+	fmt.Printf("create modelAttr %+v", *fuseAttr)
+	createout := interactor.Controller.FuseAttrToCreateOut(fuseAttr)
+	fmt.Printf("create entryout %+v", *createout)
+	return createout, err
+}
+
+func (interactor *attrInteractor) Mknod(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.EntryOut, error) {
+	inode, err := interactor.InodeServer.IssueId()
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	modelAttr, err := interactor.AttrRepository.Create(ctx, header.NodeId /* parent nodeid */, inode, mode, name)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	fuseAttr := interactor.Controller.ModelToFuse(modelAttr)
+	fmt.Printf("modelAttr %+v", *fuseAttr)
 	entryout := interactor.Controller.FuseAttrToEntryOut(fuseAttr)
+	fmt.Printf("entryout %+v", *entryout)
 	return entryout, err
 }
 

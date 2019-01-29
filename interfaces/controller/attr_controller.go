@@ -8,6 +8,7 @@ import (
 type AttrController interface {
 	ModelToFuse(m *model.Attr) *fuse.Attr
 	FuseAttrToEntryOut(fa *fuse.Attr) *fuse.EntryOut
+	FuseAttrToCreateOut(fa *fuse.Attr) *fuse.CreateOut
 }
 
 type attrController struct{}
@@ -101,5 +102,28 @@ func (a *attrController) FuseAttrToEntryOut(fa *fuse.Attr) *fuse.EntryOut {
 	return &fuse.EntryOut{
 		NodeId: fa.Ino,
 		Attr:   *fa,
+	}
+}
+
+/*
+type CreateOut struct {
+	EntryOut
+	OpenOut
+}
+*/
+
+func (a *attrController) FuseAttrToCreateOut(fa *fuse.Attr) *fuse.CreateOut {
+	/*
+		TODO : Generation ...
+	*/
+	entry := a.FuseAttrToEntryOut(fa)
+	openout := fuse.OpenOut{
+		Fh:        0,
+		OpenFlags: fuse.FOPEN_KEEP_CACHE,
+		Padding:   0,
+	}
+	return &fuse.CreateOut{
+		EntryOut: *entry,
+		OpenOut:  openout,
 	}
 }

@@ -81,16 +81,13 @@ type InHeader struct {
 */
 
 func (fs *fuseHandler) Create(input *fuse.CreateIn, name string, out *fuse.CreateOut) (code fuse.Status) {
-	/*
-		ctx := context.TODO()
-		id := input.InHeader.NodeId
-		mode := input.Mode
-		if err := fs.u.Create(ctx, parentId, id, mode, name); err != nil {
-			log.Printf("Create %t", input)
-			return fuse.OK
-		}
-	*/
-	return fuse.ENOSYS
+	ctx := context.TODO()
+	createout, err := fs.u.Create(ctx, &(input.InHeader), input.Mode, name)
+	*out = *createout
+	if err != nil {
+		return fuse.ENOSYS
+	}
+	return fuse.OK
 }
 
 func (fs *fuseHandler) OpenDir(input *fuse.OpenIn, out *fuse.OpenOut) (status fuse.Status) {
@@ -192,7 +189,7 @@ type EntryOut struct {
 
 func (fs *fuseHandler) Mknod(input *fuse.MknodIn, name string, out *fuse.EntryOut) (code fuse.Status) {
 	ctx := context.TODO()
-	entryout, err := fs.u.Create(ctx, &(input.InHeader), input.Mode, name)
+	entryout, err := fs.u.Mknod(ctx, &(input.InHeader), input.Mode, name)
 	*out = *entryout
 	if err != nil {
 		return fuse.ENOSYS
