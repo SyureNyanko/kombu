@@ -93,7 +93,7 @@ func (r *AttrRepositoryImpl) Create(ctx context.Context, parentId uint64, inode 
 	return &attr, nil
 }
 
-func (r *AttrRepositoryImpl) FetchById(ctx context.Context, inode int64) (*model.Attr, error) {
+func (r *AttrRepositoryImpl) FetchById(ctx context.Context, inode uint64) (*model.Attr, error) {
 	db, err := gorm.Open("sqlite3", r.dbpath)
 	if err != nil {
 		return nil, fmt.Errorf("DB Error")

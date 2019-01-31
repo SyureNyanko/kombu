@@ -14,7 +14,7 @@ import (
 type AttrUseCase interface {
 	Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.CreateOut, error)
 	Mknod(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.EntryOut, error)
-	GetAttr(ctx context.Context, id int64) (*model.Attr, error)
+	GetAttr(ctx context.Context, header *fuse.InHeader) (*fuse.AttrOut, error)
 	GetChildren(ctx context.Context, id int64) (*[]model.Attr, error)
 	DeleteAttr(ctx context.Context, id int64) error
 	UpdateAttr(ctx context.Context, id int64, a *model.Attr) error
@@ -67,9 +67,10 @@ func (interactor *attrInteractor) Mknod(ctx context.Context, header *fuse.InHead
 	return entryout, err
 }
 
-func (interactor *attrInteractor) GetAttr(ctx context.Context, id int64) (*model.Attr, error) {
-	a, err := interactor.AttrRepository.FetchById(ctx, id)
-	return a, err
+func (interactor *attrInteractor) GetAttr(ctx context.Context, header *fuse.InHeader) (*fuse.AttrOut, error) {
+	modelAttr, err := interactor.AttrRepository.FetchById(ctx, header.NodeId)
+	fuseAttr := interactor.Controller.ModelToFuse(modelAttr)
+	return &fuse.AttrOut{Attr: *fuseAttr}, err
 }
 
 func (interactor *attrInteractor) GetChildren(ctx context.Context, id int64) (*[]model.Attr, error) {

@@ -48,10 +48,16 @@ func (fs *fuseHandler) Lookup(header *fuse.InHeader, name string, out *fuse.Entr
 }
 
 func (fs *fuseHandler) GetAttr(input *fuse.GetAttrIn, out *fuse.AttrOut) (code fuse.Status) {
+	ctx := context.TODO()
 	if input.NodeId == ROOT_INODE {
 		return fs.r.GetAttr(input, out)
 	}
-	return fuse.ENOSYS
+	attrout, err := fs.u.GetAttr(ctx, &input.InHeader)
+	*out = *attrout
+	if err != nil {
+		return fuse.ENOSYS
+	}
+	return fuse.OK
 }
 
 func (fs *fuseHandler) Access(input *fuse.AccessIn) (code fuse.Status) {
