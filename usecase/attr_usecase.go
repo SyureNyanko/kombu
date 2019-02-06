@@ -15,9 +15,10 @@ type AttrUseCase interface {
 	Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.CreateOut, error)
 	Mknod(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.EntryOut, error)
 	GetAttr(ctx context.Context, header *fuse.InHeader) (*fuse.AttrOut, error)
-	GetChildren(ctx context.Context, id int64) (*[]model.Attr, error)
 	DeleteAttr(ctx context.Context, id int64) error
 	UpdateAttr(ctx context.Context, id int64, a *model.Attr) error
+	OpenDir(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error)
+	ReadDir(ctx context.Context, header *fuse.InHeader, size uint32, offset uint64) (*fuse.DirEntryList, error)
 }
 
 type attrInteractor struct {
@@ -73,11 +74,6 @@ func (interactor *attrInteractor) GetAttr(ctx context.Context, header *fuse.InHe
 	return &fuse.AttrOut{Attr: *fuseAttr}, err
 }
 
-func (interactor *attrInteractor) GetChildren(ctx context.Context, id int64) (*[]model.Attr, error) {
-	attrs, err := interactor.AttrRepository.FetchChildrenbyId(ctx, id)
-	return attrs, err
-}
-
 func (interactor *attrInteractor) DeleteAttr(ctx context.Context, id int64) error {
 	err := interactor.AttrRepository.Delete(ctx, id)
 	return err
@@ -86,4 +82,28 @@ func (interactor *attrInteractor) DeleteAttr(ctx context.Context, id int64) erro
 func (interactor *attrInteractor) UpdateAttr(ctx context.Context, id int64, a *model.Attr) error {
 	_, err := interactor.AttrRepository.Update(ctx, a)
 	return err
+}
+
+/* TODO: implement Open/OpenDir(issue file descripter?) */
+func (interactor *attrInteractor) OpenDir(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error) {
+	return &fuse.OpenOut{
+		Fh: 3,
+	}, nil
+}
+
+func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.InHeader, size uint32, offset uint64) (*fuse.DirEntryList, error) {
+	buf := make([]byte, size)
+	entrylist := fuse.NewDirEntryList(buf, offset)
+	attrs, err := interactor.AttrRepository.FetchChildrenbyId(ctx, header.NodeId)
+	log.Println("------")
+	for _, a := range *attrs {
+		log.Printf("Name : %s", a.Name)
+		entrylist.AddDirEntry(fuse.DirEntry{
+			Mode: a.Mode,
+			Name: a.Name,
+			Ino:  a.Ino,
+		})
+	}
+	log.Println("------")
+	return entrylist, err
 }

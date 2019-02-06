@@ -1,33 +1,30 @@
 package handler
 
 import (
-	"github.com/hanwen/go-fuse/fuse"
 	"log"
+
+	"github.com/hanwen/go-fuse/fuse"
 )
 
 type RootHandler interface {
 	GetAttr(*fuse.GetAttrIn, *fuse.AttrOut) fuse.Status
-	StatFs( *fuse.InHeader, *fuse.StatfsOut) fuse.Status 
-	Lookup( *fuse.InHeader,  string, *fuse.EntryOut) fuse.Status
-	OpenDir( *fuse.OpenIn, *fuse.OpenOut) ( fuse.Status) 
-	Access(*fuse.AccessIn)fuse.Status
-	ReadDir(*fuse.ReadIn,*fuse.DirEntryList) fuse.Status 
+	StatFs(*fuse.InHeader, *fuse.StatfsOut) fuse.Status
+	Lookup(*fuse.InHeader, string, *fuse.EntryOut) fuse.Status
+	OpenDir(*fuse.OpenIn, *fuse.OpenOut) fuse.Status
+	Access(*fuse.AccessIn) fuse.Status
 }
 
 type rootHandler struct {
-
 }
 
 func NewRootHandler(mountpoint string) RootHandler {
-	return &rootHandler{
-
-	}
+	return &rootHandler{}
 }
 
 func (fs *rootHandler) GetAttr(input *fuse.GetAttrIn, out *fuse.AttrOut) (code fuse.Status) {
-	*out = fuse.AttrOut {
-		Attr: fuse.Attr {
-			Ino : ROOT_INODE,
+	*out = fuse.AttrOut{
+		Attr: fuse.Attr{
+			Ino:  ROOT_INODE,
 			Mode: fuse.S_IFDIR | 0755,
 		},
 	}
@@ -46,18 +43,10 @@ func (fs *rootHandler) Lookup(header *fuse.InHeader, name string, out *fuse.Entr
 }
 
 func (fs *rootHandler) OpenDir(input *fuse.OpenIn, out *fuse.OpenOut) (status fuse.Status) {
-	*out = fuse.OpenOut {
-	}
+	*out = fuse.OpenOut{}
 	return fuse.OK
 }
 
 func (fs *rootHandler) Access(input *fuse.AccessIn) (code fuse.Status) {
-	return fuse.OK
-}
-
-func (fs *rootHandler) ReadDir(input *fuse.ReadIn, out *fuse.DirEntryList) fuse.Status {
-	d := []byte{}
-	*out = *fuse.NewDirEntryList(d, 0)
-	/* https://github.com/hanwen/go-fuse/blob/291273cb8ce0f139636a6fd7414be3c7e2de6288/fuse/direntry.go */
 	return fuse.OK
 }

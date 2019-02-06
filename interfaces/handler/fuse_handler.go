@@ -68,10 +68,13 @@ func (fs *fuseHandler) Access(input *fuse.AccessIn) (code fuse.Status) {
 }
 
 func (fs *fuseHandler) ReadDir(input *fuse.ReadIn, out *fuse.DirEntryList) fuse.Status {
-	if input.InHeader.NodeId == ROOT_INODE {
-		return fs.r.ReadDir(input, out)
+	ctx := context.TODO()
+	entrylist, err := fs.u.ReadDir(ctx, &(input.InHeader), input.Size, input.Offset)
+	if err != nil {
+		return fuse.ENOSYS
 	}
-	return fuse.ENOSYS
+	*out = *entrylist
+	return fuse.OK
 }
 
 /*
@@ -100,7 +103,13 @@ func (fs *fuseHandler) OpenDir(input *fuse.OpenIn, out *fuse.OpenOut) (status fu
 	if input.InHeader.NodeId == ROOT_INODE {
 		return fs.r.OpenDir(input, out)
 	}
-	return fuse.ENOSYS
+	ctx := context.TODO()
+	openout, err := fs.u.OpenDir(ctx, &(input.InHeader))
+	*out = *openout
+	if err != nil {
+		return fuse.ENOSYS
+	}
+	return fuse.OK
 }
 
 func (fs *fuseHandler) Read(input *fuse.ReadIn, buf []byte) (fuse.ReadResult, fuse.Status) {

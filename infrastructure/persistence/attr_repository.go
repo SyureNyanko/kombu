@@ -132,7 +132,7 @@ func (r *AttrRepositoryImpl) Delete(ctx context.Context, inode int64) error {
 	return nil
 }
 
-func (r *AttrRepositoryImpl) FetchChildrenbyId(ctx context.Context, parentid int64) (*[]model.Attr, error) {
+func (r *AttrRepositoryImpl) FetchChildrenbyId(ctx context.Context, parentid uint64) (*[]model.Attr, error) {
 	db, err := gorm.Open("sqlite3", r.dbpath)
 	if err != nil {
 		return nil, err
