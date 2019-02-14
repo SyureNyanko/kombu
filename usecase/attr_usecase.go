@@ -95,7 +95,7 @@ func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.InHe
 	buf := make([]byte, size)
 	entrylist := fuse.NewDirEntryList(buf, offset)
 	attrs, err := interactor.AttrRepository.FetchChildrenbyId(ctx, header.NodeId)
-	log.Println("------")
+	log.Println("-----")
 	for _, a := range *attrs {
 		log.Printf("Name : %s", a.Name)
 		entrylist.AddDirEntry(fuse.DirEntry{
@@ -104,6 +104,8 @@ func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.InHe
 			Ino:  a.Ino,
 		})
 	}
-	log.Println("------")
+	entrylist.AddDirEntry(fuse.DirEntry{Mode: fuse.S_IFDIR, Name: "."})
+	entrylist.AddDirEntry(fuse.DirEntry{Mode: fuse.S_IFDIR, Name: ".."})
+
 	return entrylist, err
 }

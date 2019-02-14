@@ -17,3 +17,4 @@ type AttrRepository interface {
 type InodeServer interface {
 	IssueId() (uint64, error)
 }
+

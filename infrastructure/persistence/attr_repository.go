@@ -67,6 +67,7 @@ type Attr struct {
 
 func NewAttrGenerator(parentId uint64, inode uint64, mode uint32, name string) model.Attr {
 	attr := model.Attr{}
+	attr.ParentId = parentId
 	attr.Ino, attr.Id = inode, inode
 	attr.Name = name
 	now := time.Now()

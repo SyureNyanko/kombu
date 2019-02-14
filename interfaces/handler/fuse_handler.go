@@ -18,6 +18,7 @@ type FuseHandler interface {
 type fuseHandler struct {
 	r RootHandler
 	u usecase.AttrUseCase
+	s usecase.FileServer
 }
 
 func NewFuseHandler(mountpoint string, u usecase.AttrUseCase) FuseHandler {
