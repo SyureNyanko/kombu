@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/hanwen/go-fuse/fuse"
+	fr "github.com/kombu/domain/file/repository"
 	"github.com/kombu/domain/model"
 	"github.com/kombu/domain/repository"
 	"github.com/kombu/interfaces/controller"
@@ -18,18 +19,18 @@ type AttrUseCase interface {
 	DeleteAttr(ctx context.Context, id int64) error
 	UpdateAttr(ctx context.Context, id int64, a *model.Attr) error
 	OpenDir(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error)
-	ReadDir(ctx context.Context, header *fuse.InHeader, size uint32, offset uint64) (*fuse.DirEntryList, error)
+	ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64) (*fuse.DirEntryList, error)
 }
 
 type attrInteractor struct {
-	AttrRepository repository.AttrRepository
-	InodeServer    repository.InodeServer
-	Controller     controller.AttrController
+	AttrRepository   repository.AttrRepository
+	InodeServer      repository.InodeServer
+	Controller       controller.AttrController
+	DiscripterServer fr.OpenedFileServer
 }
 
-func NewAttrInteractor(r repository.AttrRepository, i repository.InodeServer) AttrUseCase {
-	c := controller.NewAttrController()
-	return &attrInteractor{r, i, c}
+func NewAttrInteractor(r repository.AttrRepository, i repository.InodeServer, c controller.AttrController, s fr.OpenedFileServer) AttrUseCase {
+	return &attrInteractor{r, i, c, s}
 }
 
 func (interactor *attrInteractor) Create(ctx context.Context, header *fuse.InHeader, mode uint32, name string) (*fuse.CreateOut, error) {
@@ -86,26 +87,43 @@ func (interactor *attrInteractor) UpdateAttr(ctx context.Context, id int64, a *m
 
 /* TODO: implement Open/OpenDir(issue file descripter?) */
 func (interactor *attrInteractor) OpenDir(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error) {
+	buf := make([]byte, 10)
+	direntry := interactor.DiscripterServer.NewDirEntry()
+	attrs, _ := interactor.AttrRepository.FetchChildrenbyId(ctx, header.NodeId)
+	for  _, v := range *attrs {
+		fmt.Printf("v %+v", v)
+		entrylist := fuse.NewDirEntryList(buf, 1)
+		entrylist.AddDirEntry(fuse.DirEntry{
+			Mode: v.Mode,
+			Name: v.Name,
+			Ino:  v.Ino,
+			})
+		direntry.AddOneEntry(entrylist)
+	}
+	entrylist := fuse.NewDirEntryList(buf, 1)
+	entrylist.AddDirEntry(fuse.DirEntry{Mode: fuse.S_IFDIR, Name: "."})
+	direntry.AddOneEntry(entrylist)
+	
+	entrylist = fuse.NewDirEntryList(buf, 1)
+	entrylist.AddDirEntry(fuse.DirEntry{Mode: fuse.S_IFDIR, Name: ".."})
+	direntry.AddOneEntry(entrylist)
+
+	fmt.Printf("opendir %+v",direntry)
+	d, _ := interactor.DiscripterServer.Register(direntry)
 	return &fuse.OpenOut{
-		Fh: 3,
+		Fh: d,
 	}, nil
 }
 
-func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.InHeader, size uint32, offset uint64) (*fuse.DirEntryList, error) {
-	buf := make([]byte, size)
-	entrylist := fuse.NewDirEntryList(buf, offset)
-	attrs, err := interactor.AttrRepository.FetchChildrenbyId(ctx, header.NodeId)
+func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64) (*fuse.DirEntryList, error) {
+	
 	log.Println("-----")
-	for _, a := range *attrs {
-		log.Printf("Name : %s", a.Name)
-		entrylist.AddDirEntry(fuse.DirEntry{
-			Mode: a.Mode,
-			Name: a.Name,
-			Ino:  a.Ino,
-		})
+	entries, _ := interactor.DiscripterServer.Retrieve(header.Fh)
+	retlist := entries.RetrieveOneEntry()
+	if retlist == nil {
+		buf := make([]byte, 0)
+		retlist = fuse.NewDirEntryList(buf, 0)
 	}
-	entrylist.AddDirEntry(fuse.DirEntry{Mode: fuse.S_IFDIR, Name: "."})
-	entrylist.AddDirEntry(fuse.DirEntry{Mode: fuse.S_IFDIR, Name: ".."})
-
-	return entrylist, err
+	fmt.Printf("readdir %+v",retlist)
+	return retlist, nil
 }

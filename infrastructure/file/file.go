@@ -2,39 +2,31 @@ package file
 
 import (
 	_ "errors"
-	"fmt"
+	_ "fmt"
 	"sync"
+	"github.com/kombu/domain/file/model"
 
 	"github.com/hanwen/go-fuse/fuse"
 )
 
 type OpenedFileServerImpl struct {
 	m              sync.Mutex
-	openedFilesMap map[uint64]*(ImplDirEntry)
+	openedFilesMap map[uint64]*(model.DirEntry)
 	count          uint64
 }
 
-/*
-type OpenedFileServer interface {
-	Register(f *model.Dentry) (uint64, error)
-	Retrieve(d uint64)(*model.Dentry, error)
-	Forget(d uint64) error
-}
-
-*/
-/*
- type openedFileServer struct {
-	m sync.Mutex
-	openedFilesMap map[uint64]*Dentry
-}
-*/
+var sharedInstance *OpenedFileServerImpl = newOpenedFileServer()
 
 func NewOpenedFileServer() *OpenedFileServerImpl {
-	mp := map[uint64]*(ImplDirEntry){}
+	return sharedInstance
+}
+
+func newOpenedFileServer() *OpenedFileServerImpl {
+	mp := map[uint64]*(model.DirEntry){}
 	return &OpenedFileServerImpl{count: 0, openedFilesMap: mp}
 }
 
-func (s *OpenedFileServerImpl) Register(f *ImplDirEntry) (uint64, error) {
+func (s *OpenedFileServerImpl) Register(f *model.DirEntry) (uint64, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -50,7 +42,7 @@ func (s *OpenedFileServerImpl) Register(f *ImplDirEntry) (uint64, error) {
 	s.openedFilesMap[newcount] = f
 	return newcount, nil
 }
-func (s *OpenedFileServerImpl) Retrieve(d uint64) (*ImplDirEntry, error) {
+func (s *OpenedFileServerImpl) Retrieve(d uint64) (*model.DirEntry, error) {
 	//s.m.lock()
 	//defer s.m.unlock()
 	v, _ := s.openedFilesMap[d]
@@ -68,46 +60,14 @@ func (s *OpenedFileServerImpl) Forget(d uint64) error {
 	return nil
 }
 
-/*
-type implDirEntry interface {
-	RetrieveOneEntry() *fuse.DirEntryList
-	AddOneEntry(dentry *fuse.DirEntryList)
-}
-*/
-
-type ImplDirEntry struct {
-	Entries []*(fuse.DirEntryList)
-	Count   uint64
-	m       sync.Mutex
-}
-
-func NewDirEntry() *ImplDirEntry {
-	return &ImplDirEntry{
+func (s *OpenedFileServerImpl) NewDirEntry() *model.DirEntry{
+	return &model.DirEntry{
 		Entries: make([]*(fuse.DirEntryList), 0),
 		Count:   0,
 	}
 }
 
 
-func (d *ImplDirEntry) RetrieveOneEntry() *fuse.DirEntryList{
-	d.m.Lock()
-	defer d.m.Unlock()
-	fmt.Println(d.Count)
-	if len(d.Entries) == 0 {
-		return nil
-	}
-	ret :=  d.Entries[len(d.Entries)-1]
-	d.Entries = d.Entries[:len(d.Entries)-1]
-	d.Count = d.Count - 1;
-	return ret
-}
-
-func (d *ImplDirEntry) AddOneEntry(dentry *fuse.DirEntryList) {
-	d.m.Lock()
-	defer d.m.Unlock()
-	d.Entries = append(d.Entries, dentry)
-	d.Count = d.Count + 1
-}
 
 /*
 	Register(f *File) (uint64, error)

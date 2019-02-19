@@ -10,6 +10,8 @@ import (
 	"github.com/kombu/infrastructure/inode"
 	"github.com/kombu/infrastructure/persistence"
 	"github.com/kombu/interfaces/handler"
+	"github.com/kombu/interfaces/controller"
+	"github.com/kombu/infrastructure/file"
 	"github.com/kombu/usecase"
 )
 
@@ -25,7 +27,9 @@ func main() {
 
 	sqlRepository := persistence.NewAttrRepositoryWithSQLite("test.sqlite")
 	inodeServerRepository := inode.NewInodeServerImpl("inodefile")
-	usecase := usecase.NewAttrInteractor(sqlRepository, inodeServerRepository)
+	fileDiscripterRepository := file.NewOpenedFileServer()
+	controller := controller.NewAttrController()
+	usecase := usecase.NewAttrInteractor(sqlRepository, inodeServerRepository, controller, fileDiscripterRepository)
 	kombufs := handler.NewFuseHandler(mountPoint, usecase)
 	fmt.Println(mountPoint)
 	mountOpts := fuse.MountOptions{}

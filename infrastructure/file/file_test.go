@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"github.com/hanwen/go-fuse/fuse"
-	_ "github.com/kombu/domain/file/model"
+    "github.com/kombu/domain/file/model"
 )
 
 func TestAddAndRetrieveDescriptor(t *testing.T) {
 	ts := NewOpenedFileServer()
 	/* OpenDir */
-	de := NewDirEntry()
+	de := ts.NewDirEntry()
 	entrylist := fuse.NewDirEntryList([]byte{}, 0)
 	entrylist.AddDirEntry(fuse.DirEntry{
 		Mode: fuse.S_IFDIR,
@@ -26,7 +26,7 @@ func TestAddAndRetrieveDescriptor(t *testing.T) {
 		Ino:  1,
 	})
 	de.AddOneEntry(entrylist2)
-	d := ImplDirEntry{
+	d := model.DirEntry{
 		Entries: []*fuse.DirEntryList{entrylist, entrylist2},
 		Count:   2,
 	}

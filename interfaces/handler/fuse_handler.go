@@ -18,7 +18,6 @@ type FuseHandler interface {
 type fuseHandler struct {
 	r RootHandler
 	u usecase.AttrUseCase
-	s usecase.FileServer
 }
 
 func NewFuseHandler(mountpoint string, u usecase.AttrUseCase) FuseHandler {
@@ -70,7 +69,7 @@ func (fs *fuseHandler) Access(input *fuse.AccessIn) (code fuse.Status) {
 
 func (fs *fuseHandler) ReadDir(input *fuse.ReadIn, out *fuse.DirEntryList) fuse.Status {
 	ctx := context.TODO()
-	entrylist, err := fs.u.ReadDir(ctx, &(input.InHeader), input.Size, input.Offset)
+	entrylist, err := fs.u.ReadDir(ctx, input, input.Size, input.Offset)
 	if err != nil {
 		return fuse.ENOSYS
 	}
@@ -101,9 +100,6 @@ func (fs *fuseHandler) Create(input *fuse.CreateIn, name string, out *fuse.Creat
 }
 
 func (fs *fuseHandler) OpenDir(input *fuse.OpenIn, out *fuse.OpenOut) (status fuse.Status) {
-	if input.InHeader.NodeId == ROOT_INODE {
-		return fs.r.OpenDir(input, out)
-	}
 	ctx := context.TODO()
 	openout, err := fs.u.OpenDir(ctx, &(input.InHeader))
 	*out = *openout
