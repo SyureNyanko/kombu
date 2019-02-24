@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/kombu/usecase"
@@ -55,6 +56,7 @@ func (fs *fuseHandler) GetAttr(input *fuse.GetAttrIn, out *fuse.AttrOut) (code f
 	attrout, err := fs.u.GetAttr(ctx, &input.InHeader)
 	*out = *attrout
 	if err != nil {
+		fmt.Printf("GetAttr Error : %s", err)
 		return fuse.ENOSYS
 	}
 	return fuse.OK
@@ -69,11 +71,10 @@ func (fs *fuseHandler) Access(input *fuse.AccessIn) (code fuse.Status) {
 
 func (fs *fuseHandler) ReadDir(input *fuse.ReadIn, out *fuse.DirEntryList) fuse.Status {
 	ctx := context.TODO()
-	entrylist, err := fs.u.ReadDir(ctx, input, input.Size, input.Offset)
+	err := fs.u.ReadDir(ctx, input, input.Size, input.Offset, out)
 	if err != nil {
 		return fuse.ENOSYS
 	}
-	*out = *entrylist
 	return fuse.OK
 }
 
@@ -94,6 +95,7 @@ func (fs *fuseHandler) Create(input *fuse.CreateIn, name string, out *fuse.Creat
 	createout, err := fs.u.Create(ctx, &(input.InHeader), input.Mode, name)
 	*out = *createout
 	if err != nil {
+		fmt.Printf("Create Error : %s", err)
 		return fuse.ENOSYS
 	}
 	return fuse.OK

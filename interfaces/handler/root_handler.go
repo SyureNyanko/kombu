@@ -25,7 +25,7 @@ func (fs *rootHandler) GetAttr(input *fuse.GetAttrIn, out *fuse.AttrOut) (code f
 	*out = fuse.AttrOut{
 		Attr: fuse.Attr{
 			Ino:  ROOT_INODE,
-			Mode: fuse.S_IFDIR | 0755,
+			Mode: fuse.S_IFDIR | 0777,
 		},
 	}
 	log.Println("RootGetAttr")

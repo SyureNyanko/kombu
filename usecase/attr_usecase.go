@@ -19,7 +19,7 @@ type AttrUseCase interface {
 	DeleteAttr(ctx context.Context, id int64) error
 	UpdateAttr(ctx context.Context, id int64, a *model.Attr) error
 	OpenDir(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error)
-	ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64) (*fuse.DirEntryList, error)
+	ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64, out *fuse.DirEntryList) error
 }
 
 type attrInteractor struct {
@@ -87,43 +87,33 @@ func (interactor *attrInteractor) UpdateAttr(ctx context.Context, id int64, a *m
 
 /* TODO: implement Open/OpenDir(issue file descripter?) */
 func (interactor *attrInteractor) OpenDir(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error) {
-	buf := make([]byte, 10)
+	//buf := make([]byte, 100)
 	direntry := interactor.DiscripterServer.NewDirEntry()
+
 	attrs, _ := interactor.AttrRepository.FetchChildrenbyId(ctx, header.NodeId)
-	for  _, v := range *attrs {
-		fmt.Printf("v %+v", v)
-		entrylist := fuse.NewDirEntryList(buf, 1)
-		entrylist.AddDirEntry(fuse.DirEntry{
+	for _, v := range *attrs {
+		de := fuse.DirEntry{
 			Mode: v.Mode,
 			Name: v.Name,
 			Ino:  v.Ino,
-			})
-		direntry.AddOneEntry(entrylist)
+		}
+		direntry.AddOneEntry(&de)
 	}
-	entrylist := fuse.NewDirEntryList(buf, 1)
-	entrylist.AddDirEntry(fuse.DirEntry{Mode: fuse.S_IFDIR, Name: "."})
-	direntry.AddOneEntry(entrylist)
-	
-	entrylist = fuse.NewDirEntryList(buf, 1)
-	entrylist.AddDirEntry(fuse.DirEntry{Mode: fuse.S_IFDIR, Name: ".."})
-	direntry.AddOneEntry(entrylist)
 
-	fmt.Printf("opendir %+v",direntry)
 	d, _ := interactor.DiscripterServer.Register(direntry)
 	return &fuse.OpenOut{
 		Fh: d,
 	}, nil
 }
 
-func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64) (*fuse.DirEntryList, error) {
-	
-	log.Println("-----")
+func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64, out *fuse.DirEntryList) error {
+
+	log.Printf("----- %d \n", header.Fh)
 	entries, _ := interactor.DiscripterServer.Retrieve(header.Fh)
-	retlist := entries.RetrieveOneEntry()
-	if retlist == nil {
-		buf := make([]byte, 0)
-		retlist = fuse.NewDirEntryList(buf, 0)
+	direntry := entries.RetrieveOneEntry()
+	if direntry != nil {
+		out.AddDirEntry(*direntry)
 	}
-	fmt.Printf("readdir %+v",retlist)
-	return retlist, nil
+	fmt.Printf("readdir %+v", out)
+	return nil
 }

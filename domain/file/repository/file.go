@@ -7,13 +7,12 @@ import (
 
 type OpenedFileServer interface {
 	Register(*model.DirEntry) (uint64, error)
-	Retrieve(uint64)(*model.DirEntry, error)
+	Retrieve(uint64) (*model.DirEntry, error)
 	Forget(uint64) error
 	NewDirEntry() *model.DirEntry
 }
 
-
 type DirEntry interface {
-	RetrieveOneEntry() *fuse.DirEntryList
-	AddOneEntry(*fuse.DirEntryList)
+	RetrieveOneEntry() *fuse.DirEntry
+	AddOneEntry(*fuse.DirEntry)
 }

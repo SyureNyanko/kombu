@@ -4,9 +4,9 @@ import (
 	_ "errors"
 	_ "fmt"
 	"sync"
-	"github.com/kombu/domain/file/model"
 
 	"github.com/hanwen/go-fuse/fuse"
+	"github.com/kombu/domain/file/model"
 )
 
 type OpenedFileServerImpl struct {
@@ -43,8 +43,6 @@ func (s *OpenedFileServerImpl) Register(f *model.DirEntry) (uint64, error) {
 	return newcount, nil
 }
 func (s *OpenedFileServerImpl) Retrieve(d uint64) (*model.DirEntry, error) {
-	//s.m.lock()
-	//defer s.m.unlock()
 	v, _ := s.openedFilesMap[d]
 	return v, nil
 }
@@ -60,16 +58,9 @@ func (s *OpenedFileServerImpl) Forget(d uint64) error {
 	return nil
 }
 
-func (s *OpenedFileServerImpl) NewDirEntry() *model.DirEntry{
+func (s *OpenedFileServerImpl) NewDirEntry() *model.DirEntry {
 	return &model.DirEntry{
-		Entries: make([]*(fuse.DirEntryList), 0),
+		Entries: make([]*(fuse.DirEntry), 0),
 		Count:   0,
 	}
 }
-
-
-
-/*
-	Register(f *File) (uint64, error)
-	Forget(d uint64) error
-*/
