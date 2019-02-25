@@ -15,14 +15,7 @@ func (c BackendType) String() string {
 	}
 }
 
-type DataServer struct {
+type dataServer struct {
 	id      string
 	backend BackendType
-}
-
-/*
- boundaru
-*/
-type data struct {
-	uri string
 }
