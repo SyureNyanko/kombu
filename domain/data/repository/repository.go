@@ -2,22 +2,21 @@ package repository
 
 import (
 	"github.com/kombu/domain/protocol"
+	"github.com/kombu/domain/data/repository"
 )
 
 type DataServer interface {
 	Close(protocol.Model) error
-	GetWriter(protocol.Model) (ServerWriter, error)
-	GetReader(protocol.Model) (ServerReader, error)
+	GetWriter(protocol.Model) (*model.Writer, error)
+	GetReader(protocol.Model) (*model.Reader, error)
 }
 
-type serverWriter struct{}
 
-type ServerWriter interface {
+
+type Writer interface {
 	Write(p []byte) (n int, err error)
 }
 
-type serverReader struct{}
-
-type ServerReader interface {
+type Reader interface {
 	Read(p []byte) (n int, err error)
 }

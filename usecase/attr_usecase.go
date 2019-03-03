@@ -87,9 +87,7 @@ func (interactor *attrInteractor) UpdateAttr(ctx context.Context, id int64, a *m
 
 /* TODO: implement Open/OpenDir(issue file descripter?) */
 func (interactor *attrInteractor) OpenDir(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error) {
-	//buf := make([]byte, 100)
 	direntry := interactor.DiscripterServer.NewDirEntry()
-
 	attrs, _ := interactor.AttrRepository.FetchChildrenbyId(ctx, header.NodeId)
 	for _, v := range *attrs {
 		de := fuse.DirEntry{
@@ -107,13 +105,10 @@ func (interactor *attrInteractor) OpenDir(ctx context.Context, header *fuse.InHe
 }
 
 func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64, out *fuse.DirEntryList) error {
-
-	log.Printf("----- %d \n", header.Fh)
 	entries, _ := interactor.DiscripterServer.Retrieve(header.Fh)
 	direntry := entries.RetrieveOneEntry()
 	if direntry != nil {
 		out.AddDirEntry(*direntry)
 	}
-	fmt.Printf("readdir %+v", out)
 	return nil
 }

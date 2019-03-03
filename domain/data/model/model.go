@@ -1,6 +1,10 @@
 package model
 
+import "os"
+
 type BackendType int
+
+
 
 const (
 	LocalFileSystem BackendType = iota
@@ -15,7 +19,15 @@ func (c BackendType) String() string {
 	}
 }
 
-type dataServer struct {
-	id      string
-	backend BackendType
+type DataServer struct {
+	Id            string
+	Backend       BackendType
 }
+
+type DataFile struct {
+	fd *os.File /* need when read data from file */
+}
+
+type Writer struct{}
+
+type Reader struct{}

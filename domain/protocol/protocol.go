@@ -4,7 +4,7 @@ package protocol
  boundary
 */
 type Model struct {
-	uri    string
-	offset int
-	size   int
+	Uri    string
+	Offset int
+	Aize   int
 }
