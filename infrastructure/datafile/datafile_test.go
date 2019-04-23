@@ -39,4 +39,5 @@ func TestWriter(t *testing.T){
 		t.Error(err)
 	}
 	w.Write([]byte("Hello World!\n"))
+	//w.Close()
 }

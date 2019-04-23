@@ -111,6 +111,17 @@ func (fs *fuseHandler) OpenDir(input *fuse.OpenIn, out *fuse.OpenOut) (status fu
 	return fuse.OK
 }
 
+func (fs *fuseHandler) Open(input *fuse.OpenIn, out *fuse.OpenOut) (status fuse.Status) {
+	ctx := context.TODO()
+	openout, err := fs.u.Open(ctx, &(input.InHeader))
+	*out = *openout
+	if err != nil {
+		return fuse.ENOSYS
+	}
+	return fuse.OK
+}
+
+
 func (fs *fuseHandler) Read(input *fuse.ReadIn, buf []byte) (fuse.ReadResult, fuse.Status) {
 	return nil, fuse.ENOSYS
 }
@@ -233,9 +244,6 @@ func (fs *fuseHandler) Rename(input *fuse.RenameIn, oldName string, newName stri
 
 func (fs *fuseHandler) Link(input *fuse.LinkIn, name string, out *fuse.EntryOut) (code fuse.Status) {
 	return fuse.ENOSYS
-}
-func (fs *fuseHandler) Open(input *fuse.OpenIn, out *fuse.OpenOut) (status fuse.Status) {
-	return fuse.OK
 }
 
 func (fs *fuseHandler) SetAttr(input *fuse.SetAttrIn, out *fuse.AttrOut) (code fuse.Status) {

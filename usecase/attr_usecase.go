@@ -20,6 +20,10 @@ type AttrUseCase interface {
 	UpdateAttr(ctx context.Context, id int64, a *model.Attr) error
 	OpenDir(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error)
 	ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64, out *fuse.DirEntryList) error
+
+	Open(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error)
+	Read()
+	Write()
 }
 
 type attrInteractor struct {
@@ -104,6 +108,7 @@ func (interactor *attrInteractor) OpenDir(ctx context.Context, header *fuse.InHe
 	}, nil
 }
 
+
 func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.ReadIn, size uint32, offset uint64, out *fuse.DirEntryList) error {
 	entries, _ := interactor.DiscripterServer.Retrieve(header.Fh)
 	direntry := entries.RetrieveOneEntry()
@@ -112,3 +117,28 @@ func (interactor *attrInteractor) ReadDir(ctx context.Context, header *fuse.Read
 	}
 	return nil
 }
+
+
+func (interactor *attrInteractor) Open(ctx context.Context, header *fuse.InHeader) (*fuse.OpenOut, error) {
+	uri := interactor.AttrRepository.GetFileUri(ctx, header.NodeId)
+	d, _ := interactor.DiscripterServer.RegisterFile(header.NodeId, uri)
+	return &fuse.OpenOut{
+		Fh: d,
+	}, nil
+}
+
+func (interactor *attrInteractor) Read(ctx context.Context, header *fuse.ReadIn, buf []byte) (fuse.ReadResult, fuse.Status) {
+	uri := interactor.DiscripterServer.RetrieveFileUri(ctx, header.Fh)
+	interactor.ReadFile()/* make protocol and read */
+	/*
+	
+	 */
+
+}
+
+func (interactor *attrInteractor) Write(ctx context.Context, input *fuse.WriteIn, data []byte) (written uint32, code fuse.Status) {
+	uri := interactor.DiscripterServer.RetrieveFileUri(ctx, header.Fh)
+	interactor.WriteFile()/* make protocol and write */
+}
+
+
